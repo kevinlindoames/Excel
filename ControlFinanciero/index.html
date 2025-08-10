@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Control Financiero Personal</title>
+    <meta
+      name="description"
+      content="Aplicación para control de gastos, ingresos y ahorros"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <!-- Font Awesome para iconos -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Manifest para PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4CAF50" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Control Financiero" />
+
+    <!-- Script para registrar el Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then((reg) =>
+              console.log("Service Worker registrado con éxito:", reg.scope)
+            )
+            .catch((err) =>
+              console.log("Error al registrar el Service Worker:", err)
+            );
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1><i class="fas fa-wallet"></i> Control Financiero</h1>
+        <div class="theme-switch">
+          <i class="fas fa-moon"></i>
+          <label class="switch">
+            <input type="checkbox" id="theme-toggle" />
+            <span class="slider round"></span>
+          </label>
+          <i class="fas fa-sun"></i>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="dashboard">
+        <div class="summary-cards">
+          <div class="card income">
+            <h3>Ingresos</h3>
+            <p class="amount" id="total-income">S/. 0.00</p>
+            <p class="change" id="income-change">
+              <i class="fas fa-arrow-up"></i> 0%
+            </p>
+          </div>
+          <div class="card expenses">
+            <h3>Gastos</h3>
+            <p class="amount" id="total-expenses">S/. 0.00</p>
+            <p class="change" id="expenses-change">
+              <i class="fas fa-arrow-down"></i> 0%
+            </p>
+          </div>
+          <div class="card savings">
+            <h3>Ahorros</h3>
+            <p class="amount" id="total-savings">S/. 0.00</p>
+            <p class="change" id="savings-change">
+              <i class="fas fa-arrow-up"></i> 0%
+            </p>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-header">
+            <h2>Resumen Financiero</h2>
+            <div class="period-selector">
+              <button class="active" data-period="week">Semana</button>
+              <button data-period="month">Mes</button>
+              <button data-period="year">Año</button>
+            </div>
+          </div>
+          <canvas id="finance-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="transaction-section">
+        <div class="section-header">
+          <h2>Transacciones Recientes</h2>
+          <div class="actions">
+            <button id="add-transaction" class="btn primary">
+              <i class="fas fa-plus"></i> Nueva Transacción
+            </button>
+            <button id="view-all" class="btn secondary">Ver Todo</button>
+          </div>
+        </div>
+
+        <div class="transactions-list" id="transactions-container">
+          <!-- Las transacciones se cargarán dinámicamente aquí -->
+          <p class="empty-state">Cargando transacciones...</p>
+        </div>
+      </section>
+
+      <section class="categories-section">
+        <h2>Gastos por Categoría</h2>
+        <div class="categories-chart-container">
+          <canvas id="categories-chart"></canvas>
+        </div>
+        <div class="categories-list" id="categories-container">
+          <!-- Las categorías se cargarán dinámicamente aquí -->
+        </div>
+      </section>
+
+      <section class="savings-goals">
+        <div class="section-header">
+          <h2>Metas de Ahorro</h2>
+          <button id="add-goal" class="btn primary">
+            <i class="fas fa-plus"></i> Nueva Meta
+          </button>
+        </div>
+        <div class="goals-container" id="goals-container">
+          <!-- Las metas se cargarán dinámicamente aquí -->
+          <div class="empty-state">No hay metas de ahorro. ¡Añade una!</div>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="transaction-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Nueva Transacción</h2>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Completa el formulario o usa Google Forms para ingresar tus
+            transacciones:
+          </p>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="quick-form">
+              Formulario Rápido
+            </button>
+            <button class="tab-btn" data-tab="google-form">Google Forms</button>
+          </div>
+
+          <div class="tab-content active" id="quick-form">
+            <form id="transaction-form">
+              <div class="form-group">
+                <label for="transaction-type">Tipo</label>
+                <select id="transaction-type" required>
+                  <option value="income">Ingreso</option>
+                  <option value="expense">Gasto</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="transaction-amount">Monto (S/.)</label>
+                <input
+                  type="number"
+                  id="transaction-amount"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="transaction-category">Categoría</label>
+                <select id="transaction-category" required>
+                  <option value="">Seleccionar categoría</option>
+                  <!-- Las categorías se cargarán dinámicamente -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="transaction-date">Fecha</label>
+                <input type="date" id="transaction-date" required />
+              </div>
+
+              <div class="form-group">
+                <label for="transaction-description">Descripción</label>
+                <input
+                  type="text"
+                  id="transaction-description"
+                  placeholder="Ej: Compra en supermercado"
+                />
+              </div>
+
+              <button type="submit" class="btn primary">Guardar</button>
+            </form>
+          </div>
+
+          <div class="tab-content" id="google-form">
+            <div class="google-form-container">
+              <iframe id="google-form-iframe" src="" frameborder="0"></iframe>
+              <p class="note">
+                Los datos del formulario se sincronizarán automáticamente con tu
+                aplicación.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="goal-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Nueva Meta de Ahorro</h2>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="goal-form">
+            <div class="form-group">
+              <label for="goal-name">Nombre de la Meta</label>
+              <input type="text" id="goal-name" required />
+            </div>
+
+            <div class="form-group">
+              <label for="goal-amount">Monto objetivo (S/.)</label>
+              <input
+                type="number"
+                id="goal-amount"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="goal-date">Fecha objetivo</label>
+              <input type="date" id="goal-date" required />
+            </div>
+
+            <div class="form-group">
+              <label for="goal-color">Color</label>
+              <input type="color" id="goal-color" value="#4CAF50" />
+            </div>
+
+            <button type="submit" class="btn primary">Guardar Meta</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 Control Financiero Personal</p>
+        <div class="actions">
+          <button id="export-data" class="btn secondary small">
+            <i class="fas fa-download"></i> Exportar Datos
+          </button>
+          <button id="backup-data" class="btn secondary small">
+            <i class="fas fa-cloud-upload-alt"></i> Copia de Seguridad
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
