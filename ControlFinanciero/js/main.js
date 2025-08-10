@@ -71,11 +71,6 @@ function initApp() {
   // Cargar datos desde Google Sheets (si está configurado)
   syncWithGoogleSheets();
 
-  // Cargar datos de ejemplo para desarrollo
-  if (APP_STATE.transacciones.length === 0) {
-    loadSampleData();
-  }
-
   // Actualizar la interfaz
   updateUI();
 }
@@ -269,94 +264,8 @@ function saveLocalData() {
   }
 }
 
-// Cargar datos de ejemplo para desarrollo
-function loadSampleData() {
-  const hoy = new Date();
-  const unMesAtras = new Date();
-  unMesAtras.setMonth(hoy.getMonth() - 1);
-
-  APP_STATE.transacciones = [
-    {
-      id: "tx1",
-      tipo: "income",
-      categoria: "salario",
-      monto: 2500,
-      descripcion: "Salario mensual",
-      fecha: hoy.toISOString().split("T")[0],
-    },
-    {
-      id: "tx2",
-      tipo: "expense",
-      categoria: "vivienda",
-      monto: 800,
-      descripcion: "Alquiler",
-      fecha: hoy.toISOString().split("T")[0],
-    },
-    {
-      id: "tx3",
-      tipo: "expense",
-      categoria: "alimentacion",
-      monto: 350,
-      descripcion: "Compra semanal",
-      fecha: new Date(hoy.getTime() - 5 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-    },
-    {
-      id: "tx4",
-      tipo: "expense",
-      categoria: "transporte",
-      monto: 120,
-      descripcion: "Gasolina",
-      fecha: new Date(hoy.getTime() - 10 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-    },
-    {
-      id: "tx5",
-      tipo: "expense",
-      categoria: "entretenimiento",
-      monto: 200,
-      descripcion: "Cine y cena",
-      fecha: new Date(hoy.getTime() - 15 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-    },
-    {
-      id: "tx6",
-      tipo: "income",
-      categoria: "freelance",
-      monto: 500,
-      descripcion: "Proyecto freelance",
-      fecha: unMesAtras.toISOString().split("T")[0],
-    },
-  ];
-
-  APP_STATE.metas = [
-    {
-      id: "meta1",
-      nombre: "Fondo de emergencia",
-      monto: 5000,
-      actual: 2500,
-      fecha: new Date(hoy.getFullYear(), hoy.getMonth() + 6, 1)
-        .toISOString()
-        .split("T")[0],
-      color: "#4CAF50",
-    },
-    {
-      id: "meta2",
-      nombre: "Vacaciones",
-      monto: 3000,
-      actual: 1200,
-      fecha: new Date(hoy.getFullYear(), hoy.getMonth() + 3, 1)
-        .toISOString()
-        .split("T")[0],
-      color: "#2196F3",
-    },
-  ];
-
-  saveLocalData();
-}
+// Esta función anteriormente cargaba datos de ejemplo, pero ha sido eliminada
+// para evitar que la aplicación muestre datos ficticios
 
 // Sincronizar con Google Sheets
 function syncWithGoogleSheets() {
