@@ -16,10 +16,13 @@ const CHART_COLORS = {
   },
 };
 
+// Valor predeterminado de moneda en caso de que CONFIG no esté definido
+const DEFAULT_CURRENCY = "S/.";
+
 // Inicializar los gráficos cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", function () {
-  // Crear gráficos vacíos
-  initCharts();
+  // Crear gráficos vacíos - esperamos a que se cargue el script main.js
+  setTimeout(initCharts, 500);
 });
 
 // Inicializar los gráficos
@@ -74,7 +77,11 @@ function initCharts() {
               if (label) {
                 label += ": ";
               }
-              label += CONFIG.currency + " " + context.parsed.y.toFixed(2);
+              // Usar moneda de CONFIG si está disponible, o valor predeterminado
+              const currency = window.CONFIG
+                ? CONFIG.currency
+                : DEFAULT_CURRENCY;
+              label += currency + " " + context.parsed.y.toFixed(2);
               return label;
             },
           },
@@ -90,7 +97,11 @@ function initCharts() {
           beginAtZero: true,
           ticks: {
             callback: function (value) {
-              return CONFIG.currency + " " + value;
+              // Usar moneda de CONFIG si está disponible, o valor predeterminado
+              const currency = window.CONFIG
+                ? CONFIG.currency
+                : DEFAULT_CURRENCY;
+              return currency + " " + value;
             },
           },
         },
@@ -128,13 +139,12 @@ function initCharts() {
               const value = context.raw;
               const total = context.chart.getDatasetMeta(0).total;
               const percentage = ((value / total) * 100).toFixed(1);
+              // Usar moneda de CONFIG si está disponible, o valor predeterminado
+              const currency = window.CONFIG
+                ? CONFIG.currency
+                : DEFAULT_CURRENCY;
               return (
-                CONFIG.currency +
-                " " +
-                value.toFixed(2) +
-                " (" +
-                percentage +
-                "%)"
+                currency + " " + value.toFixed(2) + " (" + percentage + "%)"
               );
             },
           },
@@ -310,6 +320,18 @@ function updateCategoryPieChart(gastosPorCategoria) {
   const labels = [];
   const data = [];
   const backgroundColor = [];
+
+  // Verificar si CONFIG está definido
+  if (
+    !window.CONFIG ||
+    !window.CONFIG.categorias ||
+    !window.CONFIG.categorias.gastos
+  ) {
+    console.warn(
+      "⚠️ CONFIG no está definido correctamente para las categorías"
+    );
+    return;
+  }
 
   // Recorrer las categorías con gastos
   Object.entries(gastosPorCategoria).forEach(([categoryId, amount]) => {

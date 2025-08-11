@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ejemplo de Integración con Google Sheets</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #2e7d32;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .panel {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 20px;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        margin-right: 5px;
+      }
+
+      .tab.active {
+        background-color: #fff;
+        border-color: #ddd;
+        color: #2e7d32;
+        font-weight: bold;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      button {
+        background-color: #2e7d32;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      button:hover {
+        background-color: #1b5e20;
+      }
+
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top-color: #2e7d32;
+        animation: spin 1s ease-in-out infinite;
+        margin-left: 10px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .success {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+
+      .error {
+        color: #d32f2f;
+        font-weight: bold;
+      }
+
+      #status {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 4px;
+      }
+
+      #status.success {
+        background-color: #e8f5e9;
+        border: 1px solid #c8e6c9;
+      }
+
+      #status.error {
+        background-color: #ffebee;
+        border: 1px solid #ffcdd2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Ejemplo de Control Financiero con Google Sheets</h1>
+
+    <div class="panel">
+      <div class="tabs">
+        <div class="tab active" data-tab="read">Leer Datos</div>
+        <div class="tab" data-tab="write">Agregar Transacción</div>
+        <div class="tab" data-tab="about">Información</div>
+      </div>
+
+      <div class="tab-content active" id="read">
+        <h2>Leer datos de Google Sheets</h2>
+        <p>
+          Haz clic en los botones para leer los datos de cada hoja configurada:
+        </p>
+
+        <button id="btn-auth" onclick="handleAuthClick()">
+          Autorizar Acceso
+        </button>
+        <button id="btn-signout" onclick="handleSignoutClick()">
+          Cerrar Sesión
+        </button>
+
+        <hr />
+
+        <button
+          id="btn-read-transactions"
+          onclick="readTransactions()"
+          disabled
+        >
+          Leer Transacciones
+        </button>
+        <button id="btn-read-categories" onclick="readCategories()" disabled>
+          Leer Categorías
+        </button>
+        <button id="btn-read-goals" onclick="readGoals()" disabled>
+          Leer Metas
+        </button>
+
+        <div id="data-table"></div>
+      </div>
+
+      <div class="tab-content" id="write">
+        <h2>Agregar Nueva Transacción</h2>
+        <p>
+          Completa el formulario para agregar una nueva transacción a la hoja de
+          cálculo:
+        </p>
+
+        <form id="transaction-form">
+          <div class="form-group">
+            <label for="tx-date">Fecha:</label>
+            <input type="date" id="tx-date" required />
+          </div>
+
+          <div class="form-group">
+            <label for="tx-type">Tipo:</label>
+            <select id="tx-type" required>
+              <option value="Ingreso">Ingreso</option>
+              <option value="Gasto">Gasto</option>
+              <option value="Ahorro">Ahorro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tx-category">Categoría:</label>
+            <input type="text" id="tx-category" required />
+          </div>
+
+          <div class="form-group">
+            <label for="tx-amount">Monto:</label>
+            <input type="number" id="tx-amount" step="0.01" required />
+          </div>
+
+          <div class="form-group">
+            <label for="tx-description">Descripción:</label>
+            <textarea id="tx-description" rows="3"></textarea>
+          </div>
+
+          <button
+            type="button"
+            id="btn-add-transaction"
+            onclick="addTransaction()"
+            disabled
+          >
+            Agregar Transacción
+          </button>
+        </form>
+      </div>
+
+      <div class="tab-content" id="about">
+        <h2>Acerca de esta Aplicación</h2>
+        <p>
+          Esta aplicación de ejemplo demuestra cómo integrar Google Sheets con
+          una aplicación web para llevar un control financiero.
+        </p>
+
+        <h3>Características:</h3>
+        <ul>
+          <li>Integración con Google Sheets como base de datos en la nube</li>
+          <li>Autenticación con Google para acceso seguro</li>
+          <li>Lectura y escritura de transacciones financieras</li>
+          <li>Gestión de categorías y metas financieras</li>
+        </ul>
+
+        <h3>Configuración:</h3>
+        <p>Para utilizar esta aplicación, debes configurar lo siguiente:</p>
+        <ol>
+          <li>Crear un proyecto en Google Cloud Console</li>
+          <li>Habilitar la API de Google Sheets</li>
+          <li>Configurar credenciales OAuth</li>
+          <li>Crear una hoja de cálculo con la estructura adecuada</li>
+        </ol>
+
+        <p>Consulta los archivos de documentación para más detalles:</p>
+        <ul>
+          <li>
+            <a href="CONFIGURACION_SHEETS_API.md" target="_blank"
+              >Configuración de la API</a
+            >
+          </li>
+          <li>
+            <a href="COMO_CREAR_HOJA_CALCULO.md" target="_blank"
+              >Crear Hoja de Cálculo</a
+            >
+          </li>
+          <li>
+            <a href="SOLUCION_ERRORES.md" target="_blank"
+              >Solución de Errores</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="status" style="display: none"></div>
+
+    <!-- Scripts de Google -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <!-- Script de la aplicación -->
+    <script src="js/api.js"></script>
+
+    <script>
+      // Variables globales
+      let isAuthenticated = false;
+
+      // Inicializar la aplicación cuando el DOM esté listo
+      document.addEventListener("DOMContentLoaded", initApp);
+
+      // Funciones para los tabs
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById(tab.dataset.tab).classList.add("active");
+        });
+      });
+
+      // Inicializar la aplicación
+      function initApp() {
+        showStatus("Iniciando aplicación...", "info");
+
+        // Escuchar eventos de la API
+        document.addEventListener("google-api-ready", () => {
+          console.log("API de Google lista");
+          updateButtons();
+        });
+
+        document.addEventListener("google-signin-change", (event) => {
+          isAuthenticated = event.detail.isSignedIn;
+          updateButtons();
+
+          if (isAuthenticated) {
+            showStatus("Sesión iniciada correctamente", "success");
+          } else {
+            showStatus("Sesión cerrada", "info");
+          }
+        });
+
+        document.addEventListener("google-auth-success", () => {
+          isAuthenticated = true;
+          updateButtons();
+          showStatus("Autenticación exitosa", "success");
+        });
+
+        // Inicializar la API de Google
+        if (typeof API !== "undefined" && typeof API.init === "function") {
+          API.init()
+            .then(() => {
+              console.log("API inicializada");
+            })
+            .catch((err) => {
+              console.error("Error al inicializar API:", err);
+              showStatus("Error al inicializar: " + err.message, "error");
+            });
+        } else {
+          showStatus(
+            "API no disponible. Verifica que api.js esté cargado correctamente.",
+            "error"
+          );
+        }
+      }
+
+      // Actualizar estado de los botones
+      function updateButtons() {
+        const authButtons = document.querySelectorAll(
+          "#btn-auth, #btn-signout"
+        );
+        const dataButtons = document.querySelectorAll(
+          "#btn-read-transactions, #btn-read-categories, #btn-read-goals, #btn-add-transaction"
+        );
+
+        if (isAuthenticated) {
+          document.getElementById("btn-auth").style.display = "none";
+          document.getElementById("btn-signout").style.display = "inline-block";
+          dataButtons.forEach((btn) => (btn.disabled = false));
+        } else {
+          document.getElementById("btn-auth").style.display = "inline-block";
+          document.getElementById("btn-signout").style.display = "none";
+          dataButtons.forEach((btn) => (btn.disabled = true));
+        }
+      }
+
+      // Mostrar mensaje de estado
+      function showStatus(message, type = "info") {
+        const statusEl = document.getElementById("status");
+        statusEl.textContent = message;
+        statusEl.style.display = "block";
+
+        statusEl.className = "";
+        statusEl.classList.add(type);
+
+        // Ocultar después de 5 segundos para mensajes de éxito
+        if (type === "success") {
+          setTimeout(() => {
+            statusEl.style.display = "none";
+          }, 5000);
+        }
+      }
+
+      // Manejar autenticación
+      function handleAuthClick() {
+        showStatus("Iniciando sesión...", "info");
+
+        API.signIn()
+          .then((success) => {
+            if (!success) {
+              showStatus("Error al iniciar sesión", "error");
+            }
+          })
+          .catch((err) => {
+            showStatus("Error: " + err.message, "error");
+          });
+      }
+
+      // Cerrar sesión
+      function handleSignoutClick() {
+        API.signOut()
+          .then(() => {
+            isAuthenticated = false;
+            updateButtons();
+            document.getElementById("data-table").innerHTML = "";
+            showStatus("Sesión cerrada correctamente", "info");
+          })
+          .catch((err) => {
+            showStatus("Error al cerrar sesión: " + err.message, "error");
+          });
+      }
+
+      // Leer transacciones
+      function readTransactions() {
+        showStatus("Leyendo transacciones...", "info");
+        document.getElementById("data-table").innerHTML =
+          '<div class="loading"></div>';
+
+        API.readGoogleSheet("transactions")
+          .then((data) => {
+            displayTable(data, "Transacciones");
+            showStatus("Transacciones cargadas correctamente", "success");
+          })
+          .catch((err) => {
+            document.getElementById("data-table").innerHTML = "";
+            showStatus("Error al leer transacciones: " + err.message, "error");
+          });
+      }
+
+      // Leer categorías
+      function readCategories() {
+        showStatus("Leyendo categorías...", "info");
+        document.getElementById("data-table").innerHTML =
+          '<div class="loading"></div>';
+
+        API.readGoogleSheet("categories")
+          .then((data) => {
+            displayTable(data, "Categorías");
+            showStatus("Categorías cargadas correctamente", "success");
+          })
+          .catch((err) => {
+            document.getElementById("data-table").innerHTML = "";
+            showStatus("Error al leer categorías: " + err.message, "error");
+          });
+      }
+
+      // Leer metas
+      function readGoals() {
+        showStatus("Leyendo metas financieras...", "info");
+        document.getElementById("data-table").innerHTML =
+          '<div class="loading"></div>';
+
+        API.readGoogleSheet("goals")
+          .then((data) => {
+            displayTable(data, "Metas Financieras");
+            showStatus("Metas cargadas correctamente", "success");
+          })
+          .catch((err) => {
+            document.getElementById("data-table").innerHTML = "";
+            showStatus("Error al leer metas: " + err.message, "error");
+          });
+      }
+
+      // Mostrar tabla de datos
+      function displayTable(data, title) {
+        const container = document.getElementById("data-table");
+
+        if (!data || data.length === 0) {
+          container.innerHTML = "<p>No hay datos disponibles.</p>";
+          return;
+        }
+
+        let html = `<h3>${title}</h3>`;
+        html += "<table>";
+
+        // Encabezados
+        html += "<tr>";
+        data[0].forEach((header) => {
+          html += `<th>${header}</th>`;
+        });
+        html += "</tr>";
+
+        // Datos
+        for (let i = 1; i < data.length; i++) {
+          html += "<tr>";
+          data[i].forEach((cell) => {
+            html += `<td>${cell}</td>`;
+          });
+          html += "</tr>";
+        }
+
+        html += "</table>";
+        container.innerHTML = html;
+      }
+
+      // Agregar transacción
+      function addTransaction() {
+        // Obtener valores del formulario
+        const date = document.getElementById("tx-date").value;
+        const type = document.getElementById("tx-type").value;
+        const category = document.getElementById("tx-category").value;
+        const amount = document.getElementById("tx-amount").value;
+        const description = document.getElementById("tx-description").value;
+
+        // Validar formulario
+        if (!date || !type || !category || !amount) {
+          showStatus("Por favor completa todos los campos requeridos", "error");
+          return;
+        }
+
+        showStatus("Agregando transacción...", "info");
+
+        // Crear transacción en formato para la API
+        const transaction = {
+          fecha: date,
+          tipo: type === "Ingreso" ? "income" : "expense",
+          categoria: category,
+          monto: parseFloat(amount),
+          descripcion: description,
+        };
+
+        // Agregar a la hoja de cálculo
+        API.syncTransactionsWithGoogleSheets([transaction])
+          .then((result) => {
+            showStatus("Transacción agregada correctamente", "success");
+            // Limpiar formulario
+            document.getElementById("transaction-form").reset();
+            // Actualizar tabla si estamos en la pestaña de transacciones
+            if (
+              document
+                .querySelector('.tab[data-tab="read"]')
+                .classList.contains("active")
+            ) {
+              readTransactions();
+            }
+          })
+          .catch((err) => {
+            showStatus("Error al agregar transacción: " + err.message, "error");
+          });
+      }
+    </script>
+  </body>
+</html>

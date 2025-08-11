@@ -20,6 +20,7 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#4CAF50" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
@@ -31,7 +32,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("/service-worker.js")
+            .register("service-worker.js")
             .then((reg) =>
               console.log("Service Worker registrado con éxito:", reg.scope)
             )
@@ -266,13 +267,39 @@
           <button id="backup-data" class="btn secondary small">
             <i class="fas fa-cloud-upload-alt"></i> Copia de Seguridad
           </button>
+          <button id="test-connection" class="btn secondary small">
+            <i class="fas fa-sync-alt"></i> Probar Conexión
+          </button>
         </div>
       </div>
     </footer>
 
+    <!-- Google API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+
     <!-- Scripts -->
+    <script src="js/modal-utils.js"></script>
     <script src="js/api.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/main.js"></script>
+
+    <!-- Script para probar la conexión -->
+    <script>
+      // Configurar el botón de prueba de conexión
+      document.addEventListener("DOMContentLoaded", function () {
+        const testButton = document.getElementById("test-connection");
+        if (
+          testButton &&
+          typeof API !== "undefined" &&
+          typeof API.testConnection === "function"
+        ) {
+          testButton.addEventListener("click", function () {
+            console.log("🧪 Iniciando prueba de conexión con Google Sheets...");
+            API.testConnection();
+          });
+        }
+      });
+    </script>
   </body>
 </html>

@@ -8,44 +8,10 @@
   "theme_color": "#4CAF50",
   "icons": [
     {
-      "src": "img/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png"
-    },
-    {
-      "src": "img/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/icons/wallet.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "orientation": "any",
@@ -53,43 +19,20 @@
   "lang": "es-ES",
   "prefer_related_applications": false,
   "categories": ["finance", "productivity", "utilities"],
-  "screenshots": [
-    {
-      "src": "img/screenshot1.png",
-      "sizes": "1280x720",
-      "type": "image/png"
-    },
-    {
-      "src": "img/screenshot2.png",
-      "sizes": "1280x720",
-      "type": "image/png"
-    }
-  ],
+  "screenshots": [],
   "related_applications": [],
   "shortcuts": [
     {
       "name": "Nueva transacción",
       "short_name": "Transacción",
       "description": "Registrar un nuevo ingreso o gasto",
-      "url": "index.html?action=new-transaction",
-      "icons": [
-        {
-          "src": "img/transaction-icon.png",
-          "sizes": "192x192"
-        }
-      ]
+      "url": "index.html?action=new-transaction"
     },
     {
       "name": "Nueva meta",
       "short_name": "Meta",
       "description": "Crear una nueva meta de ahorro",
-      "url": "index.html?action=new-goal",
-      "icons": [
-        {
-          "src": "img/goal-icon.png",
-          "sizes": "192x192"
-        }
-      ]
+      "url": "index.html?action=new-goal"
     }
   ]
 }

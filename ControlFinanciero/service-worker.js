@@ -1,13 +1,14 @@
 // Service Worker para la aplicación Control Financiero
 
-const CACHE_NAME = "control-financiero-v1";
-const ASSETS = [
+const CACHE_NAME = "control-financiero-cache-v1";
+const urlsToCache = [
   "/",
   "/index.html",
   "/css/styles.css",
-  "/js/main.js",
-  "/js/charts.js",
   "/js/api.js",
+  "/js/charts.js",
+  "/js/main.js",
+  "/js/modal-utils.js",
   "/manifest.json",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
   "https://cdn.jsdelivr.net/npm/chart.js",
@@ -15,134 +16,87 @@ const ASSETS = [
 
 // Instalación del Service Worker
 self.addEventListener("install", (event) => {
+  console.log("Service Worker: Instalando...");
   event.waitUntil(
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        console.log("Cache abierto");
-        return cache.addAll(ASSETS);
+        console.log(
+          "Service Worker: Algunos recursos no pudieron ser cacheados"
+        );
+        return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
-  );
-});
-
-// Activación del Service Worker
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((name) => name !== CACHE_NAME)
-            .map((name) => caches.delete(name))
+      .catch((error) => {
+        console.error(
+          "Error durante la instalación del Service Worker:",
+          error
         );
       })
-      .then(() => self.clients.claim())
   );
 });
 
-// Estrategia de caché: Network First, con fallback a cache
+// Activación y limpieza de caches antiguas
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker: Activado");
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log("Service Worker: Limpiando cache antigua", cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// Estrategia de cache: Primero intenta con la red, si falla usa el cache
 self.addEventListener("fetch", (event) => {
-  // Ignorar solicitudes a Google APIs o a otros dominios
   if (
-    !event.request.url.startsWith(self.location.origin) &&
-    !event.request.url.startsWith("https://cdn.jsdelivr.net") &&
-    !event.request.url.startsWith("https://cdnjs.cloudflare.com")
+    event.request.url.includes(
+      "/.well-known/appspecific/com.chrome.devtools.json"
+    )
   ) {
+    // Ignorar solicitudes de Chrome DevTools - esto es normal y no es un error
     return;
+  }
+
+  // Para solicitudes de la API de Google, siempre ir a la red
+  if (
+    event.request.url.includes("googleapis.com") ||
+    event.request.url.includes("google.com") ||
+    event.request.url.includes("open.er-api.com")
+  ) {
+    return fetch(event.request);
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Si obtenemos una respuesta válida, la guardamos en caché
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+        // Si la respuesta es válida, clonamos y almacenamos en cache
+        if (!response || response.status !== 200 || response.type !== "basic") {
+          return response;
         }
+
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
         return response;
       })
       .catch(() => {
-        // Si la red falla, intentamos obtener el recurso de caché
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-
-          // Si no tenemos caché para esta solicitud, verificamos si es una solicitud de página
-          if (event.request.mode === "navigate") {
-            return caches.match("/index.html");
-          }
-
-          return new Response(
-            "No hay conexión a Internet y el recurso no está en caché",
-            {
-              status: 503,
-              statusText: "Service Unavailable",
-              headers: new Headers({
-                "Content-Type": "text/plain",
-              }),
-            }
-          );
-        });
+        // Si la red falla, intentamos recuperar del cache
+        return caches.match(event.request);
       })
   );
 });
 
-// Sincronización en segundo plano
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-transactions") {
-    event.waitUntil(syncTransactions());
+// Manejar mensajes desde la aplicación
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
   }
-});
-
-// Función para sincronizar transacciones pendientes
-function syncTransactions() {
-  return fetch("/api/sync")
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Sincronización exitosa:", data);
-    })
-    .catch((error) => {
-      console.error("Error en la sincronización:", error);
-    });
-}
-
-// Notificaciones push
-self.addEventListener("push", (event) => {
-  const data = event.data.json();
-  const options = {
-    body: data.body,
-    icon: "/img/icon-192x192.png",
-    badge: "/img/badge.png",
-    vibrate: [100, 50, 100],
-    data: {
-      url: data.url || "/",
-    },
-  };
-
-  event.waitUntil(self.registration.showNotification(data.title, options));
-});
-
-// Acción al hacer clic en una notificación
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-
-  event.waitUntil(
-    clients.matchAll({ type: "window" }).then((windowClients) => {
-      // Si ya hay una ventana abierta, enfocarla
-      for (const client of windowClients) {
-        if (client.url === event.notification.data.url && "focus" in client) {
-          return client.focus();
-        }
-      }
-      // Si no hay ventanas abiertas, abrir una nueva
-      if (clients.openWindow) {
-        return clients.openWindow(event.notification.data.url);
-      }
-    })
-  );
 });

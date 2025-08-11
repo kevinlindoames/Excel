@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Probar Conexión con Google Sheets</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      h1 {
+        color: #4caf50;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .button {
+        display: inline-block;
+        background-color: #4caf50;
+        color: white;
+        padding: 12px 20px;
+        margin: 10px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+      .button:hover {
+        background-color: #45a049;
+      }
+      .button-secondary {
+        background-color: #2196f3;
+      }
+      .button-secondary:hover {
+        background-color: #0b7dda;
+      }
+      .button-warning {
+        background-color: #ff9800;
+      }
+      .button-warning:hover {
+        background-color: #e68a00;
+      }
+      .button-container {
+        text-align: center;
+        margin: 30px 0;
+      }
+      pre {
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 15px;
+        overflow-x: auto;
+        font-family: Consolas, Monaco, "Andale Mono", monospace;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+        min-height: 100px;
+      }
+      .step {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+      }
+      .success {
+        color: #4caf50;
+        font-weight: bold;
+      }
+      .error {
+        color: #f44336;
+        font-weight: bold;
+      }
+      .note {
+        background-color: #fffde7;
+        padding: 10px;
+        border-left: 4px solid #ffd600;
+        margin: 15px 0;
+      }
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        margin: 15px 0;
+      }
+      .toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        margin-right: 10px;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #4caf50;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Probar Conexión con Google Sheets</h1>
+
+      <div class="note">
+        <h3>Modo Simulado</h3>
+        <p>
+          Si estás teniendo problemas con la conexión a Google Sheets, puedes
+          activar el modo simulado para continuar con el desarrollo:
+        </p>
+        <div class="toggle-container">
+          <label class="toggle">
+            <input type="checkbox" id="simulation-mode" />
+            <span class="slider"></span>
+          </label>
+          <span
+            ><strong>Activar modo simulado</strong> (no requiere conexión
+            real)</span
+          >
+        </div>
+      </div>
+
+      <div class="step">
+        <h2>Paso 1: Verificar que los scripts estén cargados</h2>
+        <p>
+          Primero, necesitamos comprobar que los archivos JavaScript de la
+          aplicación estén cargados correctamente:
+        </p>
+        <div class="button-container">
+          <button id="check-scripts" class="button">Verificar Scripts</button>
+        </div>
+        <div id="scripts-result" class="result">
+          <p>Los resultados se mostrarán aquí...</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h2>Paso 2: Probar conexión con Google Sheets</h2>
+        <p>
+          Este botón realizará una prueba de conexión con Google Sheets y
+          mostrará los resultados:
+        </p>
+        <div class="button-container">
+          <button id="test-connection" class="button button-secondary">
+            Probar Conexión
+          </button>
+        </div>
+        <div id="connection-result" class="result">
+          <p>Los resultados se mostrarán aquí...</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <p>
+          <strong>Nota:</strong> Para ver mensajes detallados, abre la consola
+          del navegador presionando F12 y seleccionando la pestaña "Console".
+        </p>
+      </div>
+
+      <div class="step">
+        <h2>Solución de problemas</h2>
+        <p>Si encuentras errores, consulta estas opciones:</p>
+        <div class="button-container">
+          <a
+            href="SOLUCION_ERRORES.md"
+            target="_blank"
+            class="button button-warning"
+            >Ver Solución de Errores</a
+          >
+          <a
+            href="CONFIGURACION_SHEETS_API.md"
+            target="_blank"
+            class="button button-warning"
+            >Revisar Configuración</a
+          >
+        </div>
+      </div>
+
+      <p>
+        Una vez que hayas verificado la conexión, puedes
+        <a href="index.html">volver a la aplicación principal</a>.
+      </p>
+    </div>
+
+    <!-- Google API -->
+    <!-- Usando las nuevas bibliotecas recomendadas por Google -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <!-- Scripts de la aplicación -->
+    <script src="js/modal-utils.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Control de modo simulado
+        const simulationToggle = document.getElementById("simulation-mode");
+
+        // Verificar si ya estamos en modo simulado
+        if (
+          typeof window.forceSimulationMode !== "undefined" &&
+          window.forceSimulationMode
+        ) {
+          simulationToggle.checked = true;
+        }
+
+        simulationToggle.addEventListener("change", function () {
+          window.forceSimulationMode = this.checked;
+
+          // Mostrar mensaje
+          const resultsDiv = document.getElementById("scripts-result");
+          if (this.checked) {
+            resultsDiv.innerHTML =
+              '<p class="success">✓ Modo simulado activado. Las llamadas a la API usarán datos simulados.</p>';
+          } else {
+            resultsDiv.innerHTML =
+              "<p>Modo simulado desactivado. Se intentará usar la conexión real.</p>";
+          }
+
+          // Recargar la página para aplicar el cambio
+          if (
+            confirm(
+              "Es necesario recargar la página para aplicar el cambio. ¿Deseas hacerlo ahora?"
+            )
+          ) {
+            location.reload();
+          }
+        });
+
+        // Botón para verificar scripts
+        document
+          .getElementById("check-scripts")
+          .addEventListener("click", function () {
+            const resultsDiv = document.getElementById("scripts-result");
+            resultsDiv.innerHTML = "";
+
+            // Verificar si el API de Google está definido
+            if (typeof gapi !== "undefined") {
+              resultsDiv.innerHTML +=
+                '<p class="success">✓ API de Google (gapi) está cargada</p>';
+            } else {
+              resultsDiv.innerHTML +=
+                '<p class="error">✗ API de Google (gapi) NO está cargada</p>';
+            }
+
+            // Verificar si nuestra API está definida
+            if (typeof API !== "undefined") {
+              resultsDiv.innerHTML +=
+                '<p class="success">✓ API de la aplicación está cargada</p>';
+
+              // Verificar funciones específicas
+              const functions = [
+                "init",
+                "signIn",
+                "readGoogleSheet",
+                "syncTransactionsWithGoogleSheets",
+                "testConnection",
+              ];
+
+              functions.forEach((func) => {
+                if (typeof API[func] === "function") {
+                  resultsDiv.innerHTML += `<p class="success">✓ Función API.${func}() está disponible</p>`;
+                } else {
+                  resultsDiv.innerHTML += `<p class="error">✗ Función API.${func}() NO está disponible</p>`;
+                }
+              });
+            } else {
+              resultsDiv.innerHTML +=
+                '<p class="error">✗ API de la aplicación NO está cargada</p>';
+            }
+
+            // Verificar configuración
+            if (
+              typeof API !== "undefined" &&
+              typeof API_CONFIG !== "undefined"
+            ) {
+              resultsDiv.innerHTML +=
+                '<p class="success">✓ Configuración de API está disponible</p>';
+
+              // Mostrar valores importantes de configuración
+              const config = {
+                "API Key configurada": API_CONFIG.apiKey ? "Sí" : "No",
+                "Client ID configurado": API_CONFIG.clientId ? "Sí" : "No",
+                "ID de Hoja de cálculo":
+                  API_CONFIG.formulariosGoogle.transacciones.spreadsheetId,
+              };
+
+              let configHTML = "<pre>";
+              for (const [key, value] of Object.entries(config)) {
+                configHTML += `${key}: ${value}\n`;
+              }
+              configHTML += "</pre>";
+
+              resultsDiv.innerHTML += configHTML;
+
+              // Mostrar modo actual
+              if (window.forceSimulationMode) {
+                resultsDiv.innerHTML +=
+                  '<p class="success">✓ Modo simulado está ACTIVADO</p>';
+              } else {
+                resultsDiv.innerHTML += "<p>Modo simulado está desactivado</p>";
+              }
+            } else if (typeof API_CONFIG === "undefined") {
+              resultsDiv.innerHTML +=
+                '<p class="error">✗ Configuración de API (API_CONFIG) NO está disponible</p>';
+            }
+          });
+
+        // Botón para probar conexión
+        document
+          .getElementById("test-connection")
+          .addEventListener("click", function () {
+            const resultsDiv = document.getElementById("connection-result");
+            resultsDiv.innerHTML =
+              "<p>Probando conexión con Google Sheets...</p>";
+
+            if (
+              typeof API === "undefined" ||
+              typeof API.testConnection !== "function"
+            ) {
+              resultsDiv.innerHTML =
+                '<p class="error">Error: La función de prueba de conexión no está disponible.</p>';
+              return;
+            }
+
+            // Crear un nuevo div para mostrar resultados
+            const resultContainer = document.createElement("div");
+            resultContainer.id = "test-results";
+            resultsDiv.appendChild(resultContainer);
+
+            // Redefinir temporalmente la función showDataModal para mostrar los datos en nuestra página
+            window.originalShowDataModal = window.showDataModal;
+
+            window.showDataModal = function (title, data) {
+              console.log("Mostrando datos de prueba:", title, data);
+
+              resultContainer.innerHTML = "<h3>" + title + "</h3>";
+
+              if (Array.isArray(data) && data.length > 0) {
+                // Crear tabla HTML
+                let tableHTML =
+                  '<table style="width:100%; border-collapse:collapse; margin-top:10px;">';
+
+                // Encabezados
+                tableHTML += "<thead><tr>";
+                const headers = Array.isArray(data[0])
+                  ? data[0]
+                  : Object.keys(data[0]);
+                headers.forEach((header) => {
+                  tableHTML += `<th style="padding:8px; text-align:left; border-bottom:2px solid #ddd; background-color:#f2f2f2;">${header}</th>`;
+                });
+                tableHTML += "</tr></thead>";
+
+                // Cuerpo de la tabla
+                tableHTML += "<tbody>";
+                const startIndex =
+                  Array.isArray(data[0]) && !Array.isArray(data[0][0]) ? 1 : 0;
+
+                for (let i = startIndex; i < data.length; i++) {
+                  tableHTML += '<tr style="border-bottom:1px solid #ddd;">';
+
+                  if (Array.isArray(data[i])) {
+                    data[i].forEach((cell) => {
+                      tableHTML += `<td style="padding:8px;">${
+                        cell !== undefined && cell !== null ? cell : ""
+                      }</td>`;
+                    });
+                  } else {
+                    Object.values(data[i]).forEach((cell) => {
+                      tableHTML += `<td style="padding:8px;">${
+                        cell !== undefined && cell !== null ? cell : ""
+                      }</td>`;
+                    });
+                  }
+
+                  tableHTML += "</tr>";
+                }
+
+                tableHTML += "</tbody></table>";
+                resultContainer.innerHTML += tableHTML;
+              } else {
+                resultContainer.innerHTML +=
+                  "<p>No se recibieron datos de la hoja de cálculo.</p>";
+              }
+
+              // Mensaje de resultado
+              const resultMsg = document.createElement("p");
+              resultMsg.className = window.forceSimulationMode
+                ? "success"
+                : "success";
+              resultMsg.textContent = window.forceSimulationMode
+                ? "✓ Prueba completada en modo simulado. Los datos mostrados son simulados."
+                : "✓ Prueba completada. Verifica los datos mostrados arriba.";
+              resultContainer.appendChild(resultMsg);
+            };
+
+            // Ejecutar la prueba de conexión
+            try {
+              API.testConnection().catch((error) => {
+                resultContainer.innerHTML = `<p class="error">Error durante la prueba: ${error.message}</p>`;
+                resultContainer.innerHTML += `
+                <div class="note">
+                  <p><strong>Sugerencias:</strong></p>
+                  <ul>
+                    <li>Verifica que la hoja de cálculo exista y sea accesible con tu cuenta</li>
+                    <li>Comprueba que has iniciado sesión con la cuenta correcta</li>
+                    <li>Revisa que los permisos de la API estén configurados correctamente</li>
+                    <li>Considera activar el modo simulado para desarrollo mientras resuelves los problemas de conexión</li>
+                  </ul>
+                </div>
+                `;
+                console.error("Error durante prueba de conexión:", error);
+              });
+            } catch (error) {
+              resultContainer.innerHTML = `<p class="error">Error al ejecutar prueba: ${error.message}</p>`;
+              console.error("Error al ejecutar prueba de conexión:", error);
+            }
+          });
+      });
+    </script>
+  </body>
+</html>
